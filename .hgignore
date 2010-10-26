@@ -1,0 +1,20 @@
+psage.egg-info
+~
+pyc
+build/
+dist
+#
+ascent.egg-info
+MANIFEST
+.aux
+.dvi
+.log
+.toc
+auto
+docs/ascent.pdf
+docs/notebook.out
+.so
+
+
+psage/ellff/ellff.cpp   # cython autogen 
+psage/function_fields/function_field_element.c  # cython autogen

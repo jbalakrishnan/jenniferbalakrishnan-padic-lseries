@@ -1,0 +1,24 @@
+psage.egg-info
+~
+pyc
+build/
+dist
+#
+ascent.egg-info
+MANIFEST
+.aux
+.dvi
+.log
+.toc
+auto
+docs/ascent.pdf
+docs/notebook.out
+.so
+
+
+psage/ellff/ellff.cpp   # cython autogen 
+psage/function_fields/function_field_element.c  # cython autogen
+psage/modform/siegel/fastmult.c   # cython
+psage/modform/maass/maass_forms_alg.c   # cython
+psage/modform/maass/mysubgroups_alg.c   # cython
+psage/modform/maass/lpkbessel.c   # cython

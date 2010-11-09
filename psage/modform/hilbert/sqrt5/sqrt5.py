@@ -100,7 +100,7 @@ This relies on having TH from above (say from the level 31 block above)::
 """
 
 
-from sage.all import NumberField, polygen, QQ, ZZ, QuaternionAlgebra
+from sage.all import NumberField, polygen, QQ, ZZ, QuaternionAlgebra, cached_function, disk_cached_function
 
 x = polygen(QQ,'x')
 F = NumberField(x**2 - x -1, 'a')
@@ -262,6 +262,33 @@ def icosian_gens():
     return [B(v)/2 for v in [(0,2,0,0), (0,0,2,0), 
                  (0,0,0,2), (-1,1,1,1), (0,1,omega,omega_bar)]]
 
+
+
+def compute_all_icosians():
+    Icos = []
+    ig = icosian_gens()
+    per = permutations(range(5))
+    exp = cartesian_product_iterator([range(1,i) for i in [5,5,5,4,5]])
+    for f in exp:
+        for p in per:
+            e0 = ig[p[0]]**f[0]
+            e1 = ig[p[1]]**f[1]
+            e2 = ig[p[2]]**f[2]
+            e3 = ig[p[3]]**f[3]
+            e4 = ig[p[4]]**f[4]
+            elt = e0*e1*e2*e3*e4
+            if elt not in Icos:
+                Icos.append(elt)
+        if len(Icos) == 120:
+            return Icos
+
+@cached_function
+def all_icosians():
+    s = '[1+a*i+(-a+1)*k,1+(-a+1)*i+a*j,-a+i+(a-1)*j,1+(-a)*i+(-a+1)*k,-a-j+(-a+1)*k,1+(a-1)*i+(-a)*j,-1+(-a)*i+(a-1)*k,-1+(a-1)*i+(-a)*j,-a+1+(-a)*j-k,-1+a*i+(-a+1)*k,-a+1+i+(-a)*k,-1+(-a+1)*i+(-a)*j,(-a+1)*i+j+(-a)*k,a-1+(-a)*j+k,(a-1)*i-j+a*k,a+i+(-a+1)*j,1+a*i+(a-1)*k,-1+(-a)*i+(-a+1)*k,a*i+(-a+1)*j-k,a-1+i+a*k,(-a)*i+(a-1)*j+k,a+j+(-a+1)*k,1+(-a+1)*i+(-a)*j,-1+(a-1)*i+a*j,a-i+(-a+1)*j,-1+a*i+(a-1)*k,a+j+(a-1)*k,-1+(-a+1)*i+a*j,(-a+1)*i+j+a*k,a-1+a*j+k,-a+i+(-a+1)*j,1+(-a)*i+(a-1)*k,a*i+(-a+1)*j+k,a-1-i+a*k,-a+j+(a-1)*k,1+(a-1)*i+a*j,(a-1)*i+j+a*k,-a+1+a*j+k,(-a)*i+(-a+1)*j+k,-a+1+i+a*k,-a-i+(-a+1)*j,-a+1+(-a)*j+k,(-a+1)*i-j+a*k,(a-1)*i+j+(-a)*k,a+i+(a-1)*j,a-1+a*j-k,-a+j+(-a+1)*k,-a+1-i+a*k,a*i+(a-1)*j+k,(-a)*i+(-a+1)*j-k,a-j+(a-1)*k,a-1+i+(-a)*k,-1+i+j+k,-1-i-j+k,1-i-j-k,1+i-j+k,a-j+(-a+1)*k,-1+i-j-k,1-i+j+k,(a-1)*i-j+(-a)*k,-a-j+(a-1)*k,1+i+j-k,a*i+(a-1)*j-k,-1-i+j-k,a-1+(-a)*j-k,-a+1+a*j-k,(-a)*i+(a-1)*j-k,-a+1-i+(-a)*k,-a-i+(a-1)*j,a-1-i+(-a)*k,(-a+1)*i-j+(-a)*k,a-i+(a-1)*j,-i+(-a)*j+(a-1)*k,i+a*j+(a-1)*k,i+a*j+(-a+1)*k,-i+a*j+(a-1)*k,-i+a*j+(-a+1)*k,i+(-a)*j+(a-1)*k,-i+(-a)*j+(-a+1)*k,i+(-a)*j+(-a+1)*k,-1-i-j-k,1+i+j+k,2,-a+1+a*i-j,-2,-a+(-a+1)*i-k,a-1+a*i+j,a+(-a+1)*i+k,a-1+(-a)*i+j,1+(-a+1)*j+(-a)*k,-a+1+a*i+j,-1+(-a+1)*j+a*k,a+(a-1)*i+k,-1+(a-1)*j+a*k,-a+(-a+1)*i+k,1+(-a+1)*j+a*k,-a+1+(-a)*i+j,-a+(a-1)*i+k,a-1+a*i-j,1+(a-1)*j+a*k,a+(-a+1)*i-k,-1+(-a+1)*j+(-a)*k,-a+1+(-a)*i-j,-a+(a-1)*i-k,a-1+(-a)*i-j,1+(a-1)*j+(-a)*k,a+(a-1)*i-k,-1+(a-1)*j+(-a)*k,-1+i+j-k,1-i+j-k,1-i-j+k,-1-i+j+k,-1+i-j+k,1+i-j-k,2*k,(-2)*j,(-2)*k,2*i,2*j,(-2)*i]'
+    v = eval(s, {'a':F.gen(), 'i':B.gen(0), 'j':B.gen(1), 'k':B.gen(0)*B.gen(1)})
+    return [B(x)/B(2) for x in v]
+
+
 def icosian_ring_gens():
     """
     Return generators for the icosian ring (a maximal order) in the
@@ -270,6 +297,8 @@ def icosian_ring_gens():
     """
     global B, F
     # See page 6 of Dembele.
+    # DO NOT CHANGE THESE!  You'll break, e.g., the optimized code for
+    # writing elements in terms of these...
     omega = F.gen()
     omega_bar = 1 - F.gen()
     return [B(v)/2 for v in [(1,-omega_bar,omega,0),
@@ -812,6 +841,55 @@ class AlphaZ:
     def all_alpha(self):
         return [self.alpha(z) for z in P1ModList(self.P)]
 
+#@cached_function
+
+import os
+path = '/tmp/hmf-%s'%os.environ['USER']
+if not os.path.exists(path):
+    os.makedirs(path)
+@disk_cached_function(path, memory_cache=True)
+def hecke_elements(P):
+    if P.norm() == 4:
+        # hardcode this special case.
+        return hecke_elements_2()
+    else:
+        return [~a for a in AlphaZ(P).all_alpha()]
+
+
+# Dumb code to get this special case.  The answer turns out to be:
+# The following elements, divided by 2, where coordinates are in terms of 1,i,j,k, and a=(1+sqrt(5))/2:
+#  [[-a-1,0,a-2,1], [-a-1,a-1,-a+1,a-1], [-a-1,-a+1,-a+1,a-1], [-a-1,-a+2,-1,0], [-a-1,a-2,-1,0]]
+def hecke_elements_2():
+    P = F.primes_above(2)[0]
+    from sqrt5_fast import ModN_Reduction
+    from sage.matrix.all import matrix
+        
+    f = ModN_Reduction(P)
+    G = icosian_ring_gens()
+    k = P.residue_field()
+    g = k.gen()
+    def pi(z):
+        # Note that f(...) returns a string right now, since it's all done at C level.
+        # This will prboably change, breaking this code. 
+        M = matrix(k,2,eval(f(z).replace(';',','), {'g':g})).transpose()
+        v = M.echelon_form()[0]
+        v.set_immutable()
+        return v
+        
+    # now just run through elements of icosian ring until we find enough...
+    ans = {}
+    a = F.gen()
+    B = 1
+    X = [i + a*j for i in range(-B,B+1) for j in range(-B,B+1)]
+    for v in cartesian_product_iterator([X]*4):
+        z = sum(v[i]*G[i] for i in range(4))
+        if z.reduced_norm() == 2:
+            t = pi(z)
+            if not ans.has_key(t):
+                ans[t] = z
+            if len(ans) == 5:
+                return [x for _, x in ans.iteritems()]
+    raise RuntimeError
 
 class HMF:
     def __init__(self, N):
@@ -883,9 +961,15 @@ class ResidueRing_base:
         if x.parent() is not self._F:
             x = self._F(x)
         return self._to_ring(x)
+
+    def list(self):
+        return self._ring.list()
     
     def _to_ring(self, x):
         return self._ring(x[0]) + self._im_gen*self._ring(x[1])
+
+    def ring(self):
+        return self._ring
 
     def __repr__(self):
         return "Residue class ring of ZZ[(1+sqrt(5))/2] modulo %s of characteristic %s"%(
@@ -903,7 +987,7 @@ class ResidueRing_split(ResidueRing_base):
         # Figure out the map to Z/p^e.
         fac = self._F.defining_polynomial().factor_padic(p, prec=e+1)
         assert len(fac) == 2
-        roots = [-a[0][0].lift() for a in fac]
+        roots = [(-a[0][0]).lift() for a in fac]
         gen = self._F.gen()
         if gen - roots[0] in N:
             im_gen = roots[0]
@@ -926,6 +1010,7 @@ class ResidueRing_inert(ResidueRing_base):
         R = Integers(p**e)
         modulus = self._F.defining_polynomial().change_ring(R)
         S = R['x']
+        self._base = R
         self._ring = S.quotient_by_principal_ideal(modulus)
         self._im_gen = self._ring.gen()
 
@@ -934,6 +1019,11 @@ class ResidueRing_inert(ResidueRing_base):
         # f is a linear poly in generator of field
         return self._F(f)
 
+    def list(self):
+        R = self._ring
+        x = R.gen()
+        return [R(a + b*x) for a in self._base for b in self._base]
+    
 
 class ResidueRing_ramified_even(ResidueRing_base):
     def __init__(self, N, P, p, e):
@@ -1067,10 +1157,116 @@ class RamifiedProductRing:
         return self._gen
 
         
-        
-def mod_pe_splitting_map(B, p, e):
-    if p.number_field() != B.base():
-        raise ValueError, "p must be a prime ideal in the base field of the quaternion algebra"
-    if not p.is_prime():
-        raise ValueError, "p must be prime"
-    raise NotImplementedError
+class Mod_P_reduction_map:
+    def __init__(self, P):
+        FAC = P.factor()
+        assert len(FAC) == 1
+        self._p, self._e = FAC[0]
+        self._I, self._J, self._residue_ring = self._compute_IJ(self._p, self._e)
+        self._IJ = self._I*self._J
+
+    def __repr__(self):
+        return "(Partial) homomorphism from %s onto 2x2 matrices modulo %s^%s"%(
+            B, self._p._repr_short(), self._e)
+
+    def domain(self):
+        return B
+
+    def codomain(self):
+        return self._I.parent()
+
+    def __call__(self, x):
+        R = self._residue_ring
+        if x.parent() is not B:
+            x = B(x)
+        return R(x[0]) + self._I*R(x[1]) + self._J*R(x[2]) + self._IJ*R(x[3])
+
+    def _compute_IJ(self, p, e):
+        global B, F
+        if p.number_field() != B.base():
+            raise ValueError, "p must be a prime ideal in the base field of the quaternion algebra"
+        if not p.is_prime():
+            raise ValueError, "p must be prime"
+
+        if p.number_field() != B.base():
+            raise ValueError, "p must be a prime ideal in the base field of the quaternion algebra"
+        if not p.is_prime():
+            raise ValueError, "p must be prime"
+        if F is not p.number_field():
+            raise ValueError, "p must be a prime of %s"%F
+
+        R = residue_ring(p**e)
+        if isinstance(R, ResidueRing_base):
+            k = R.ring()
+        else:
+            k = R
+
+        from sage.all import MatrixSpace
+        M = MatrixSpace(k, 2)
+
+        i2, j2 = B.invariants()
+        i2 = R(i2); j2 = R(j2)
+
+        if k.characteristic() == 2:
+            raise NotImplementedError
+
+        # Find I -- just write it down
+        I = M([0,i2,1,0])
+        # Find J -- I figured this out by just writing out the general case
+        # and seeing what the parameters have to satisfy
+        i2inv = k(1)/i2
+        a = None
+        for b in R.list():
+            if not b: continue
+            c = j2 + i2inv * b*b
+            if c.is_square():
+                a = -c.sqrt()
+                break        
+        if a is None:
+            # do a fallback search; needed in char 3 sometimes.
+            for J in M:
+                K = I*J
+                if J*J == j2 and K == -J*I:
+                    return I, J, K
+
+        J = M([a,b,(j2-a*a)/b, -a])
+        K = I*J
+        assert K == -J*I, "bug in that I,J don't skew commute"    
+        return I, J, R
+    
+
+#NOTE: I don't think I like this at all.  The results are too big!
+# It would make way more sense to find an algorithm to find a representative
+# in the ideal that minimizes a^2 + 5*b^2, i.e., the sum of the
+# squares of the images under the two real embeddings. 
+def canonical_representative_mod_units(I):
+    """
+    Given an ideal I or element of F, returns our agreed upon canocial
+    element, which generators the same fractional ideal.
+    """
+    phi = F.real_embeddings()[1]
+    from sage.all import log, floor, ceil
+    from sage.rings.all import is_Ideal
+
+    if is_Ideal(I):
+        alpha = I.gens_reduced()[0]
+    else:
+        alpha = F(I)
+    s = phi(alpha) 
+    if s < 0:
+        alpha *= -1
+        s = phi(alpha)
+
+    gamma = F.gen()
+    if s < phi(gamma):
+        # multiply by some power of gamma so bigger than gamma
+        n = ceil(1 - log(s)/log(gamma))
+        alpha *= gamma**n
+    # Now make it the first number smaller than gamma
+    n = floor(log(s)/log(phi(gamma)))
+    alpha = alpha/gamma**n
+    if alpha == gamma:
+        alpha = F(1)
+    return alpha
+
+

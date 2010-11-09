@@ -48,7 +48,7 @@ def cython(f_pyx, language, include_dirs, force):
             return full_outfile, []
     includes = ''.join(["-I '%s' "%x for x in include_dirs])
     # call cython
-    cmd = "cd %s && python `which cython` --embed-positions --directive cdivision=True %s -o %s %s"%(
+    cmd = "cd %s && python `which cython` --embed-positions --directive cdivision=False %s -o %s %s"%(
         dir, includes, outfile, f)
     return full_outfile, [cmd]
 
